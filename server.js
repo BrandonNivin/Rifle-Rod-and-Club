@@ -67,6 +67,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Simple DB health check
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW() AS now");
+    res.json({ ok: true, time: result.rows[0].now });
+  } catch (err) {
+    console.error("DB test failed:", err);
+    res.status(500).json({ ok: false, error: "DB connection failed" });
+  }
+});
+
+
 
 // Read posts helper
 function readPosts() {
