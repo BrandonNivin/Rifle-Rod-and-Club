@@ -15,6 +15,35 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false } // needed for Render’s Postgres
 });
 
+function mapDbPost(row) {
+  // Normalize images from jsonb (or string, just in case)
+  let images = [];
+  if (Array.isArray(row.images)) {
+    images = row.images;
+  } else if (typeof row.images === "string" && row.images.trim() !== "") {
+    try {
+      images = JSON.parse(row.images);
+    } catch (_) {
+      images = [];
+    }
+  }
+
+  const createdAt = row.created_at || row.date; // in case of naming differences
+  const updatedAt = row.updated_at || null;
+
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category || "",
+    content: row.content,
+    images,
+    imageUrl: row.image_url || (images[0] || ""),
+    affiliateLink: row.affiliate_link || "",
+    date: createdAt ? new Date(createdAt).toISOString() : null,
+    updatedAt: updatedAt ? new Date(updatedAt).toISOString() : null,
+  };
+}
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,11 +70,6 @@ app.use(express.static(path.join(__dirname, "public")));
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // =============================
-// File for storing posts
-// =============================
-const POSTS_FILE = path.join(__dirname, "posts.json");
-
-// =============================
 // Multer setup for file uploads
 // =============================
 // Ensure uploads folder exists: /public/uploads
@@ -67,47 +91,31 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Simple DB health check
-app.get("/api/db-test", async (req, res) => {
+// =============================
+// GET: All posts
+// =============================
+app.get("/api/posts", async (req, res) => {
   try {
-    const result = await pool.query("SELECT NOW() AS now");
-    res.json({ ok: true, time: result.rows[0].now });
+    const result = await pool.query(
+      `SELECT id, title, category, content, images, image_url,
+              affiliate_link, created_at, updated_at
+       FROM posts
+       ORDER BY created_at DESC`
+    );
+
+    const posts = result.rows.map(mapDbPost);
+    res.json(posts);
   } catch (err) {
-    console.error("DB test failed:", err);
-    res.status(500).json({ ok: false, error: "DB connection failed" });
+    console.error("Error fetching posts from DB:", err);
+    res.status(500).json({ error: "Failed to fetch posts" });
   }
 });
 
 
-
-// Read posts helper
-function readPosts() {
-  if (!fs.existsSync(POSTS_FILE)) return [];
-  const data = fs.readFileSync(POSTS_FILE, "utf8");
-  return data ? JSON.parse(data) : [];
-}
-
-// Write posts helper
-function writePosts(posts) {
-  fs.writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2));
-}
-
-// =============================
-// GET: All posts
-// =============================
-app.get("/api/posts", (req, res) => {
-  const posts = readPosts();
-
-  // sort by newest (descending)
-  posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  res.json(posts);
-});
-
 // =============================
 // POST: Create new post (admin, with images)
 // =============================
-app.post("/api/posts", upload.array("images", 10), (req, res) => {
+app.post("/api/posts", upload.array("images", 10), async (req, res) => {
   const { adminPassword, title, category, content, affiliateLink } = req.body;
 
   // authentication
@@ -120,34 +128,33 @@ app.post("/api/posts", upload.array("images", 10), (req, res) => {
     return res.status(400).json({ error: "Title and content are required" });
   }
 
-  const posts = readPosts();
+  try {
+    // Uploaded image files → URLs front-end can use
+    const imageUrls = (req.files || []).map((file) => `/uploads/${file.filename}`);
+    const imagesJson = JSON.stringify(imageUrls);
+    const mainImage = imageUrls[0] || "";
 
-  // Uploaded image files → URLs front-end can use
-  const imageUrls = (req.files || []).map((file) => `/uploads/${file.filename}`);
+    const result = await pool.query(
+      `INSERT INTO posts (title, category, content, images, image_url, affiliate_link)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, title, category, content, images, image_url,
+                 affiliate_link, created_at, updated_at`,
+      [title, category || "", content, imagesJson, mainImage, affiliateLink || ""]
+    );
 
-  const newPost = {
-    id: Date.now(),
-    title,
-    category: category || "",
-    content,
-    images: imageUrls,                     // array of images
-    imageUrl: imageUrls[0] || "",          // keep first one for compatibility
-    affiliateLink: affiliateLink || "",
-    date: new Date().toISOString()
-  };
+    const post = mapDbPost(result.rows[0]);
 
-  posts.push(newPost);
-  writePosts(posts);
-
-  res.json({ success: true, post: newPost });
+    res.json({ success: true, post });
+  } catch (err) {
+    console.error("Error creating post:", err);
+    res.status(500).json({ error: "Failed to create post" });
+  }
 });
-
-
 
 // =============================
 // UPDATE an existing post (admin, optional new images)
 // =============================
-app.put("/api/posts/:id", upload.array("images", 10), (req, res) => {
+app.put("/api/posts/:id", upload.array("images", 10), async (req, res) => {
   const postId = Number(req.params.id);
   const { adminPassword, title, category, content, affiliateLink } = req.body;
 
@@ -163,48 +170,84 @@ app.put("/api/posts/:id", upload.array("images", 10), (req, res) => {
       .json({ error: "Title and content are required" });
   }
 
-  let posts = readPosts();
-  const idx = posts.findIndex((p) => p.id === postId);
+  try {
+    // load existing post
+    const existingResult = await pool.query(
+      `SELECT id, title, category, content, images, image_url,
+              affiliate_link, created_at, updated_at
+       FROM posts
+       WHERE id = $1`,
+      [postId]
+    );
 
-  if (idx === -1) {
-    return res.status(404).json({ error: "Post not found" });
+    if (existingResult.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const existing = existingResult.rows[0];
+
+    // normalize existing images
+    let existingImages = [];
+    if (Array.isArray(existing.images)) {
+      existingImages = existing.images;
+    } else if (typeof existing.images === "string" && existing.images.trim() !== "") {
+      try {
+        existingImages = JSON.parse(existing.images);
+      } catch (_) {
+        existingImages = [];
+      }
+    }
+
+    // new uploaded images
+    const newImageUrls = (req.files || []).map((file) => `/uploads/${file.filename}`);
+
+    // If new images uploaded, replace; otherwise keep old ones
+    const finalImages = newImageUrls.length > 0 ? newImageUrls : existingImages;
+
+    const finalImageUrl =
+      newImageUrls.length > 0
+        ? newImageUrls[0]
+        : (existing.image_url || (existingImages[0] || ""));
+
+    const updatedAt = new Date();
+    const imagesJson = JSON.stringify(finalImages);
+
+    const updateResult = await pool.query(
+      `UPDATE posts
+       SET title = $1,
+           category = $2,
+           content = $3,
+           affiliate_link = $4,
+           images = $5,
+           image_url = $6,
+           updated_at = $7
+       WHERE id = $8
+       RETURNING id, title, category, content, images, image_url,
+                 affiliate_link, created_at, updated_at`,
+      [
+        title,
+        category || "",
+        content,
+        affiliateLink || "",
+        imagesJson,
+        finalImageUrl,
+        updatedAt,
+        postId,
+      ]
+    );
+
+    const updatedPost = mapDbPost(updateResult.rows[0]);
+    res.json({ success: true, post: updatedPost });
+  } catch (err) {
+    console.error("Error updating post:", err);
+    res.status(500).json({ error: "Failed to update post" });
   }
-
-  const existingPost = posts[idx];
-
-  const newImageUrls = (req.files || []).map((file) => `/uploads/${file.filename}`);
-
-  // If new images uploaded, replace; otherwise keep old ones
-  const finalImages =
-    newImageUrls.length > 0 ? newImageUrls : (existingPost.images || []);
-  const finalImageUrl =
-    newImageUrls.length > 0
-      ? newImageUrls[0]
-      : (existingPost.imageUrl || (existingPost.images && existingPost.images[0]) || "");
-
-  posts[idx] = {
-    ...existingPost,
-    title,
-    category,
-    content,
-    affiliateLink,
-    images: finalImages,
-    imageUrl: finalImageUrl,
-    updatedAt: new Date().toISOString()
-  };
-
-  writePosts(posts);
-  res.json({ success: true, post: posts[idx] });
 });
-
-
-
-
 
 // =============================
 // DELETE: Delete a post (admin)
 // =============================
-app.delete("/api/posts/:id", (req, res) => {
+app.delete("/api/posts/:id", async (req, res) => {
   const { adminPassword } = req.body;
   const postId = Number(req.params.id);
 
@@ -213,18 +256,23 @@ app.delete("/api/posts/:id", (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  let posts = readPosts();
-  const originalLength = posts.length;
+  try {
+    const result = await pool.query(
+      "DELETE FROM posts WHERE id = $1 RETURNING id",
+      [postId]
+    );
 
-  posts = posts.filter((p) => p.id !== postId);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Post not found" });
+    }
 
-  if (posts.length === originalLength) {
-    return res.status(404).json({ error: "Post not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting post:", err);
+    res.status(500).json({ error: "Failed to delete post" });
   }
-
-  writePosts(posts);
-  res.json({ success: true });
 });
+
 
 // =============================
 // Start the server
