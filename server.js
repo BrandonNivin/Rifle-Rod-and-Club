@@ -281,6 +281,7 @@ app.delete("/api/posts/:id", async (req, res) => {
   }
 });
 
+// Just a fun lil comment
 
 // =============================
 // Start the server
