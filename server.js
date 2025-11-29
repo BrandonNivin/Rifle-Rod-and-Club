@@ -7,6 +7,14 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 const multer = require("multer");
+const pg = require("pg");
+const { Pool } = pg;
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false } // needed for Render’s Postgres
+});
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
