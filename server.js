@@ -72,24 +72,32 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // =============================
 // Multer setup for file uploads
 // =============================
-// Ensure uploads folder exists: /public/uploads
-const uploadsDir = path.join(__dirname, "public", "uploads");
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+
+// In production (Render), we'll set UPLOADS_DIR to a path on a persistent disk.
+// Locally, it will default to /public/uploads.
+const UPLOADS_ROOT =
+  process.env.UPLOADS_DIR || path.join(__dirname, "public", "uploads");
+
+if (!fs.existsSync(UPLOADS_ROOT)) {
+  fs.mkdirSync(UPLOADS_ROOT, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        cb(null, file.fieldname + "-" + uniqueSuffix + ext);
-    }
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_ROOT);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+  }
 });
 
 const upload = multer({ storage });
+
+// Serve /uploads paths from the correct folder
+app.use("/uploads", express.static(UPLOADS_ROOT));
+
 
 // =============================
 // GET: All posts
