@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rifle Rod and Club Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-left">
+        <img src="logo.jpg" alt="Logo" class="site-logo">
+    </div>
+
+    <div class="header-center">
+      <h1>Rifle Rod and Club Admin</h1>
+      <p>Create a new post for the blog.</p>
+    </div>
+
+    <div class="header-right"></div>
+  </header>
+
+  <main>
+    <section>
+      <h2 id="formHeading">New Post</h2>
+
+      <form id="new-post-form" enctype="multipart/form-data">
+        <div>
+          <label>Admin Password:</label><br>
+          <input type="password" id="adminPassword" required>
+        </div>
+
+        <div>
+          <label>Title:</label><br>
+          <input type="text" id="title" required>
+        </div>
+
+        <div>
+          <label>Category:</label><br>
+          <input type="text" id="category" placeholder="Golf, Fishing, Hunting, Workout">
+        </div>
+
+        <div>
+          <label>Content:</label><br>
+          <textarea id="content" rows="6" required
+            placeholder="Write about the item, why you like it, how you use it, etc."></textarea>
+        </div>
+
+        <div>
+          <label for="images">Upload images</label><br>
+          <input type="file" id="images" name="images" accept="image/*" multiple>
+        </div>
+
+        <div>
+          <label>Affiliate Link (optional):</label><br>
+          <input type="text" id="affiliateLink" placeholder="https://your-affiliate-link">
+        </div>
+
+        <br>
+        <button type="submit" id="submitButton">Publish Post</button>
+        <button type="button" id="cancelEditButton" style="display:none;">Cancel Edit</button>
+        <p id="statusMessage"></p>
+
+      </form>
+    </section>
+
+    <section>
+      <h2>Existing Posts</h2>
+      <div class="existing-posts">
+        <p>Use edit or delete to manage posts.</p>
+        <ul id="admin-posts"></ul>
+      </div>
+    </section>
+  </main>
+</body>
+<script src="admin.js"></script>
+</html>

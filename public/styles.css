@@ -1,0 +1,379 @@
+/* ============================ */
+/*        BASIC RESET           */
+/* ============================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ============================ */
+/*          COLORS              */
+/* ============================ */
+:root {
+    --masters-green: #0B663A;
+    --masters-yellow: #F2C200;
+    --dark-text: #1A1A1A;
+    --light-bg: #FAF9F6;
+    --white: #FFFFFF;
+}
+
+/* ============================ */
+/*         BODY & GLOBAL        */
+/* ============================ */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    line-height: 1.6;
+    padding-bottom: 40px;
+}
+
+/* Center content and set max width */
+main {
+    width: 60%;
+    margin: 0 auto;
+}
+
+/* ============================ */
+/*           HEADER             */
+/* ============================ */
+header {
+    background-color: var(--masters-green);
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--white);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+/* Navigation Links */
+header nav a {
+    color: var(--masters-yellow);
+    margin: 0 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+.site-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 15px 0;
+}
+
+/* Left container */
+.header-left {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.site-logo {
+    height: 160px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    padding-left: 15px;
+}
+
+/* Center container */
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-center h1 {
+    margin: 0;
+}
+
+
+/* Right container stays empty but balances the layout */
+.header-right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+
+/* ============================ */
+/*         BLOG POSTS           */
+/* ============================ */
+h2 {
+    margin: 30px 0 15px;
+    border-left: 6px solid var(--masters-green);
+    padding-left: 10px;
+}
+
+/* Individual blog post container */
+.post {
+    background-color: var(--white);
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-left: 6px solid var(--masters-yellow);
+    margin-bottom: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.post-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.post-images img.post-image {
+  width: 150px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Fullscreen image viewer (lightbox) */
+#image-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#image-lightbox img {
+    max-width: 95%;
+    max-height: 95%;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+#image-lightbox.close-area {
+    cursor: zoom-out;
+}
+
+/* Blog post titles */
+.post h3 {
+    color: var(--masters-green);
+    margin-bottom: 8px;
+    font-size: 1.6rem;
+}
+
+/* Post date + category */
+.post-meta {
+    font-size: 0.9rem;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Lists inside posts */
+.post ul {
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.post ul li a {
+    color: var(--masters-green);
+    font-weight: bold;
+}
+
+.post ul li a:hover {
+    color: var(--masters-yellow);
+}
+
+.view-btn {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-top: 10px;
+    background-color: var(--masters-yellow);
+    color: var(--masters-green);
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: 0.2s ease;
+    border: 2px solid var(--masters-green);
+}
+
+.view-btn:hover {
+    background-color: var(--masters-green);
+    color: var(--masters-yellow);
+    border-color: var(--masters-yellow);
+    transform: translateY(-2px);
+}
+
+
+/* ============================ */
+/*         ABOUT/CONTACT        */
+/* ============================ */
+section {
+    margin-top: 30px;
+    padding-bottom: 10px;
+}
+
+/* ============================ */
+/*           FOOTER             */
+/* ============================ */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--masters-green);
+    color: var(--white);
+    font-size: 0.9rem;
+}
+
+/* ============================ */
+/*        ADMIN PAGE STYLE      */
+/* ============================ */
+
+#admin-container,
+form,
+.existing-posts {
+    margin: 0 auto;
+}
+
+form {
+    background-color: var(--white);
+    padding: 25px;
+    border-radius: 10px;
+    border-left: 6px solid var(--masters-green);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    margin-top: 25px;
+}
+
+form h2 {
+    margin-bottom: 15px;
+    color: var(--masters-green);
+    border-left: none;
+    padding-left: 0;
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+form label {
+    font-weight: bold;
+    color: var(--masters-green);
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+form input[type="text"],
+form input[type="password"],
+form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background-color: #fdfdfb;
+    transition: border-color 0.2s ease;
+}
+
+form input:focus,
+form textarea:focus {
+    outline: none;
+    border-color: var(--masters-green);
+}
+
+form button {
+    background-color: var(--masters-green);
+    color: var(--white);
+    padding: 12px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+form button:hover {
+    background-color: #094d2d; /* darker green */
+}
+
+#statusMessage {
+    margin-top: 12px;
+    font-weight: bold;
+    color: var(--masters-yellow);
+}
+
+header.admin-header {
+    background-color: var(--masters-green);
+    color: var(--white);
+    padding: 30px 20px;
+    text-align: center;
+}
+
+header.admin-header h1 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+header.admin-header p {
+    color: var(--masters-yellow);
+    font-size: 1rem;
+}
+
+/* ============================ */
+/*  EXISTING POSTS SECTION STYLE */
+/* ============================ */
+.existing-posts {
+    background-color: var(--white);
+    padding: 25px;
+    border-left: 6px solid red; /* Only difference */
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.existing-posts h2 {
+    margin-bottom: 15px;
+    color: var(--dark-text);
+}
+
+#admin-posts {
+    list-style: none;
+    padding-left: 0;
+}
+
+#admin-posts li {
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#admin-posts li strong {
+    color: var(--masters-green);
+}
+
+.delete-post {
+    background-color: red;
+    color: white;
+    font-size: 0.9rem;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-post:hover {
+    background-color: #cc0000;
+}
+
