@@ -31,7 +31,8 @@ body {
 
 /* Center content and set max width */
 main {
-    width: 60%;
+    width: 90%;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
@@ -377,3 +378,41 @@ header.admin-header p {
     background-color: #cc0000;
 }
 
+/* ============================ */
+/*        RESPONSIVE TWEAKS     */
+/* ============================ */
+@media (max-width: 768px) {
+  main {
+    width: 95%;
+  }
+
+  .site-logo {
+    height: 100px;
+    padding-left: 8px;
+  }
+
+  .header-center h1 {
+    font-size: 1.6rem;
+  }
+
+  .header-center p {
+    font-size: 0.95rem;
+  }
+
+  header.admin-header h1 {
+    font-size: 1.6rem;
+  }
+
+  header.admin-header p {
+    font-size: 0.95rem;
+  }
+
+  .post {
+    padding: 15px;
+  }
+
+  .post-images img.post-image {
+    width: 100%;
+    max-width: 280px;
+  }
+}
