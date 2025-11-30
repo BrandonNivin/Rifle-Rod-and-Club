@@ -46,7 +46,26 @@ function mapDbPost(row) {
 
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
+
+const { rateLimit } = require("express-rate-limit");
+
+const limiter = rateLimit({
+    max: 100,
+    windowMs: 15 * 60 * 1000,
+    message: {
+        status: 429,
+        error: "Too many requests",
+        message: "Too many requests from this IP. Please try again after 15 minutes."
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+app.use(limiter);
+
+
 
 // =====================
 // CORS (for Live Server)
